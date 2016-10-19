@@ -1,0 +1,24 @@
+{
+	"name": "verbi/yii2-web-view",
+	"description": "Yii2 Web View Extension.",
+	"keywords": ["yii2", "extension", "web", "view"],
+	"type": "yii2-extension",
+	"license": "New BSD License",
+	"authors": [
+		{
+			"name": "Philip Verbist",
+			"email": "philip.verbist@gmail.com"
+		}
+	],
+	"support": {
+		"source": "https://github.com/verbi/yii2-web-view"
+	},
+        "require": {
+            "verbi/yii2-helpers": "*"
+        },
+	"autoload": {
+		"psr-4": {
+			"verbi\\yii2WebView\\": "src/"
+		}
+	}
+}
