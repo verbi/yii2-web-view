@@ -4,10 +4,13 @@ namespace verbi\yii2WebView\web;
 use \Yii;
 use yii\helpers\Inflector;
 use yii\helpers\StringHelper;
+use yii\base\Widget;
+use verbi\yii2Helpers\widgets\Pjax;
 class View extends \yii\web\View {
 
     protected $beforeRenderPhpFileBaseView;
     protected $afterRenderPhpFileBaseView;
+    protected $registerWidgetStack;
     public $returnLinkUrl;
     public $returnLinkText;
 
@@ -72,5 +75,82 @@ class View extends \yii\web\View {
         }
         return $output;
     }
+    
+    protected function &getRegisterWidgetStack() {
+            $this->registerWidgetStack = array_filter(Widget::$stack,
+            function(&$item) {
+                if($item instanceof Pjax) {
+                    return true;
+                }
+                return false;
+            });
+        return $this->registerWidgetStack;
+    }
 
+    public function registerAssetBundle($name, $position = null)
+    {
+        array_walk(
+            $this->getRegisterWidgetStack(),
+            function(&$item) use (&$name, &$position) {
+                $item->registerAssetBundle($name, $position);
+            }
+        );
+        $bundle = parent::registerAssetBundle($name, $position);
+        return $bundle;
+    }
+    
+    public function registerLinkTag($options, $key = null)
+    {
+        array_walk(
+            $this->getRegisterWidgetStack(),
+            function(&$item) use (&$options, &$key) {
+                $item->registerLinkTag($options, $key);
+            }
+        );
+        parent::registerLinkTag($options, $key);
+    }
+    
+    public function registerCss($css, $options = [], $key = null)
+    {
+        array_walk(
+            $this->getRegisterWidgetStack(),
+            function(&$item) use (&$css, &$options, &$key) {
+                $item->registerCss($css, $options, $key);
+            }
+        );
+        parent::registerCss($css, $options, $key);
+    }
+    
+    public function registerCssFile($url, $options = [], $key = null)
+    {
+        array_walk(
+            $this->getRegisterWidgetStack(),
+            function(&$item) use (&$url, &$options, &$key) {
+                $item->registerCssFile($url, $options, $key);
+            }
+        );
+        parent::registerCssFile($url, $options, $key);
+    }
+    
+    public function registerJs($js, $position = self::POS_READY, $key = null)
+    {
+        array_walk(
+            $this->getRegisterWidgetStack(),
+            function(&$item) use (&$js, &$position, &$key) {
+                $item->registerJs($js, $position, $key);
+            }
+        );
+        parent::registerJs($js, $position, $key);
+    }
+    
+    public function registerJsFile($url, $options = [], $key = null)
+    {
+        array_walk(
+            $this->getRegisterWidgetStack(),
+            function(&$item) use (&$url, &$options, &$key) {
+                $item->registerJsFile($url, $options, $key);
+            }
+        );
+        parent::registerJsFile($url, $options, $key);
+    }
 }
