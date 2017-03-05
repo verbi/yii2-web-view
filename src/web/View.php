@@ -6,6 +6,7 @@ use yii\helpers\Inflector;
 use yii\helpers\StringHelper;
 use yii\base\Widget;
 use verbi\yii2Helpers\widgets\Pjax;
+use verbi\yii2Helpers\Html;
 class View extends \yii\web\View {
 
     protected $beforeRenderPhpFileBaseView;
@@ -27,23 +28,25 @@ class View extends \yii\web\View {
     }
 
     public function initTitle() {
-        if (!$this->title) {
+        if (!$this->title && Yii::$app->controller) {
             $this->title = Yii::t('verbi', Inflector::camel2words(StringHelper::basename(Yii::$app->controller->action->id)) . ' ' . Inflector::camel2words(StringHelper::basename(Yii::$app->controller->id)));
         }
     }
 
     public function initBreadcrumbs() {
-        if(Yii::$app->controller->module) {
+        if(Yii::$app->controller) {
+            if(Yii::$app->controller->module) {
+                $this->params['breadcrumbs'][] = [
+                    'label' => Yii::t('verbi', Inflector::camel2words(StringHelper::basename(Yii::$app->controller->module->id))),
+                    'url' => ['/'.Yii::$app->controller->module->id.'/'.Yii::$app->controller->module->defaultRoute],
+                ];
+            }
             $this->params['breadcrumbs'][] = [
-                'label' => Yii::t('verbi', Inflector::camel2words(StringHelper::basename(Yii::$app->controller->module->id))),
-                'url' => ['/'.Yii::$app->controller->module->id.'/'.Yii::$app->controller->module->defaultRoute],
+                'label' => Yii::t('verbi', Inflector::pluralize(Inflector::camel2words(StringHelper::basename(Yii::$app->controller->id)))),
+                'url' => ['/' . Yii::$app->controller->getUniqueId() . '/index'],
             ];
+            $this->params['breadcrumbs'][] = Yii::t( 'verbi', Yii::$app->controller->action->id );
         }
-        $this->params['breadcrumbs'][] = [
-            'label' => Yii::t('verbi', Inflector::pluralize(Inflector::camel2words(StringHelper::basename(Yii::$app->controller->id)))),
-            'url' => ['/' . Yii::$app->controller->getUniqueId() . '/index'],
-        ];
-        $this->params['breadcrumbs'][] = Yii::t( 'verbi', Yii::$app->controller->action->id );
     }
 
     public function getBeforeRenderPhpFileBaseView() {
@@ -151,6 +154,81 @@ class View extends \yii\web\View {
                 $item->registerJsFile($url, $options, $key);
             }
         );
-        parent::registerJsFile($url, $options, $key);
+        $jsOptions = [
+            'async' => 'async',
+        ];
+        parent::registerJsFile($url, array_merge($jsOptions, $options), $key);
+    }
+    
+        protected function renderHeadHtml()
+    {
+        $lines = [];
+        if (!empty($this->metaTags)) {
+            $lines[] = implode('', $this->metaTags);
+        }
+        if (!empty($this->linkTags)) {
+            $lines[] = implode('', $this->linkTags);
+        }
+        if (!empty($this->cssFiles)) {
+            $lines[] = implode('', $this->cssFiles);
+        }
+        if (!empty($this->css)) {
+            $lines[] = implode('', $this->css);
+        }
+        if (!empty($this->jsFiles[self::POS_HEAD])) {
+            $lines[] = implode('', $this->jsFiles[self::POS_HEAD]);
+        }
+        if (!empty($this->js[self::POS_HEAD])) {
+            $lines[] = Html::script(implode('', $this->js[self::POS_HEAD]), ['type' => 'text/javascript']);
+        }
+        return empty($lines) ? '' : implode('', $lines);
+    }
+    
+    protected function renderBodyBeginHtml()
+    {
+        $lines = [];
+        if (!empty($this->jsFiles[self::POS_BEGIN])) {
+            $lines[] = implode('', $this->jsFiles[self::POS_BEGIN]);
+        }
+        if (!empty($this->js[self::POS_BEGIN])) {
+            $lines[] = Html::script(implode('', $this->js[self::POS_BEGIN]), ['type' => 'text/javascript']);
+        }
+        return empty($lines) ? '' : implode('', $lines);
+    }
+    
+    protected function renderBodyEndHtml($ajaxMode)
+    {
+        $lines = [];
+        if (!empty($this->jsFiles[self::POS_END])) {
+            $lines[] = implode('', $this->jsFiles[self::POS_END]);
+        }
+        if ($ajaxMode) {
+            $scripts = [];
+            if (!empty($this->js[self::POS_END])) {
+                $scripts[] = implode('', $this->js[self::POS_END]);
+            }
+            if (!empty($this->js[self::POS_READY])) {
+                $scripts[] = implode('', $this->js[self::POS_READY]);
+            }
+            if (!empty($this->js[self::POS_LOAD])) {
+                $scripts[] = implode('', $this->js[self::POS_LOAD]);
+            }
+            if (!empty($scripts)) {
+                $lines[] = Html::script(implode('', $scripts), ['type' => 'text/javascript']);
+            }
+        } else {
+            if (!empty($this->js[self::POS_END])) {
+                $lines[] = Html::script(implode('', $this->js[self::POS_END]), ['type' => 'text/javascript']);
+            }
+            if (!empty($this->js[self::POS_READY])) {
+                $js = "jQuery(document).ready(function () {" . implode('', $this->js[self::POS_READY]) . "});";
+                $lines[] = Html::script($js, ['type' => 'text/javascript']);
+            }
+            if (!empty($this->js[self::POS_LOAD])) {
+                $js = "jQuery(window).on('load', function () {" . implode('', $this->js[self::POS_LOAD]) . "});";
+                $lines[] = Html::script($js, ['type' => 'text/javascript']);
+            }
+        }
+        return empty($lines) ? '' : implode('', $lines);
     }
 }
