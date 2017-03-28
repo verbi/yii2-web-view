@@ -155,7 +155,7 @@ class View extends \yii\web\View {
             }
         );
         $jsOptions = [
-            'async' => 'async',
+//            'async' => 'async',
         ];
         parent::registerJsFile($url, array_merge($jsOptions, $options), $key);
     }
