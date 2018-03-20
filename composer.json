@@ -3,7 +3,7 @@
 	"description": "Yii2 Web View Extension.",
 	"keywords": ["yii2", "extension", "web", "view"],
 	"type": "yii2-extension",
-	"license": "GPLv3",
+	"license": "GPL-3.0-or-later",
 	"authors": [
 		{
 			"name": "Philip Verbist",
